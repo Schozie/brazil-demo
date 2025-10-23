@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Postal Code Search</title>
+    <style>
+      header,
+      .header {
+        position: fixed;
+        z-index: 100;
+        top: 0;
+        left: 0;
+        right: 0;
+        margin-bottom: 40px;
+        background-color: #0f948d;
+        color: #fff;
+        font-size: 1.3em;
+        padding: 0.8rem;
+        line-height: 20px;
+        min-height: 50px;
+        overflow: hidden;
+        text-align: center;
+      }
+      .home-link {
+        color: white;
+        text-decoration: none;
+        position: absolute;
+        left: 6%;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 2em;
+        transition: left 0.3s ease;
+      }
+      .home-link:hover {
+        left: 5%;
+      }
+      .logo {
+        position: absolute;
+        left: 50%;
+        top: 53%;
+        transform: translate(-50%, -50%);
+        height: 50px;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      form {
+        margin: 0 auto;
+        max-width: 55%;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+      .form-field {
+        margin-bottom: 20px;
+      }
+      .form-row .form-field {
+        margin-bottom: 0;
+      }
+      .form-row + .form-row {
+        margin-top: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      .autocomplete-list {
+        list-style: none;
+        padding: 0;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        max-height: 200px;
+        overflow-y: auto;
+        background-color: white;
+      }
+      .autocomplete-list li {
+        padding: 8px;
+        cursor: pointer;
+      }
+      .autocomplete-list li:hover {
+        background-color: #bff3f0;
+      }
+      div#Label {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 8px;
+        white-space: pre-line;
+        overflow: hidden;
+        word-wrap: break-word;
+        background-color: #f9f9f9;
+        color: #333;
+        flex-grow: 2;
+      }
+      button#toggleDetails {
+        border: none;
+        border-radius: 20px;
+        padding: 10px 20px;
+        cursor: pointer;
+        background-color: #0f948d;
+        color: white;
+        font-size: 16px;
+        margin-left: 10px;
+        transition: background-color 0.3s;
+        transition: all 0.2s ease-in-out;
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+      button#toggleDetails:hover {
+        background-color: #0d7b6f;
+        transform: scale(1.15);
+      }
+      button#nextAddress {
+        border: none;
+        border-radius: 20px;
+        padding: 10px 20px;
+        cursor: pointer;
+        background-color: #0f948d;
+        color: white;
+        font-size: 16px;
+        margin-left: 10px;
+        transition: background-color 0.3s;
+        transition: all 0.2s ease-in-out;
+        white-space: nowrap;
+        display: block;
+      }
+      button#nextAddress:hover {
+        background-color: #0d7b6f;
+        transform: scale(1.15);
+      }
+
+      .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 20px;
+        gap: 3%;
+      }
+      .form-field {
+        display: flex;
+        flex-direction: column;
+      }
+      .half-width {
+        flex-basis: 48.5%;
+      }
+      .form-field:not(.half-width) {
+        flex-basis: 70%;
+      }
+      .form-field.quarter-width {
+        flex-basis: 27%;
+      }
+      @media (max-width: 840px) {
+        .half-width,
+        .form-field:not(.half-width),
+        .form-field.quarter-width {
+          flex-basis: 100%;
+        }
+      }
+      .autocomplete-list {
+        position: absolute;
+        z-index: 1000;
+        width: calc(100% - 16px);
+        top: 100%;
+        left: 1px;
+        box-sizing: border-box;
+      }
+      .form-field {
+        position: relative;
+      }
+      .label-and-button {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .label-and-button > label {
+        margin-right: 10px;
+      }
+      #Label {
+        flex-grow: 1;
+        margin-right: 10px;
+      }
+      .half-width:last-child,
+      .quarter-width:last-child {
+        margin-right: 0;
+      }
+
+      /* Table Design */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+      }
+
+      th,
+      td {
+        padding: 4px; /* Padding for cells */
+        text-align: left; /* Left-align text */
+      }
+
+      th {
+        background-color: #0f948d;
+        color: white;
+      }
+
+      tr:nth-child(odd) {
+        background-color: #f9f9f9; /* Zebra stripes for rows */
+      }
+
+      tr:hover {
+        background-color: #e8e8e8; /* Hover effect for rows */
+      }
+      th,
+      td {
+        height: auto;
+        white-space: nowrap;
+      }
+      th:first-child,
+      td:first-child {
+        border-left: none;
+      }
+      th:last-child,
+      td:last-child {
+        border-right: none;
+      }
+      th:first-child,
+      td:first-child {
+        border-top: none;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      div.form span {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #0f948d;
+        border-radius: 5px;
+      }
+
+      .autocomplete-list {
+        width: 100%;
+      }
+      .form-field.full-width {
+        flex-basis: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="startDemo.html" class="home-link">◄🌍</a>
+      <img src="img/FullLogo-Light-Loqate.svg" alt="logo" class="logo" />
+    </header>
+
+    <div style="height: 80px; width: 100%; background-color: transparent"></div>
+
+    <form>
+      <div class="form-row">
+        <label for="CountryName">Country</label>
+        <select id="CountryName">
+          <option value="BR">Brazil</option>
+        </select>
+      </div>
+      <!-- Row for Postal Code and City -->
+      <div class="form-row">
+        <div class="form-field full-width">
+          <label for="PostalCode">Postal Code</label>
+          <input
+            id="PostalCode"
+            type="text"
+            placeholder="Zip/Postal Code"
+            autocomplete="off"
+          />
+          <ul
+            id="PostalCodeSuggestions"
+            class="autocomplete-list"
+            style="display: none"
+          ></ul>
+        </div>
+  
+      </br>
+        <div class="form-field full-width">
+          <label for="Line1">Line1</label>
+          <input
+            id="Line1"
+            type="text"
+            placeholder="Street and House number"
+            autocomplete="off"
+          />
+          <ul
+            id="Line1Suggestions"
+            class="autocomplete-list"
+            style="display: none"
+          ></ul>
+        </div>
+      
+      </div>
+
+      
+ <div class="form-field full-width">
+          <label for="City">City</label>
+          <input id="City" type="text" placeholder="City" autocomplete="off" />
+        </div> 
+      <div class="form-row">
+        <label for="Province">Province</label>
+        <input
+          id="Province"
+          type="text"
+          placeholder="State/Province"
+          autocomplete="off"
+        />
+      </div>
+      <div class="form">
+        <span style="margin-bottom: 5px">Shipping Label</span>
+      </div>
+      <div class="label-and-button">
+        <div id="Label">Address details</div>
+        <button type="button" id="toggleDetails">▼ Details</button>
+        <button type="button" id="nextAddress">Next Address</button>
+      </div>
+
+      <table id="detailsTable" style="display: none; width: 100%" border="1">
+        <thead>
+          <tr>
+            <th>Address detail</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody id="detailsTableBody"></tbody>
+      </table>
+    </form>
+
+    <script>
+      // Add event listener to the PostalCode input field
+      document
+        .getElementById("PostalCode")
+        .addEventListener("input", function () {
+          const postalCode = this.value;
+          if (postalCode.length >= 1) {
+            fetchPostalCodeSuggestions(postalCode);
+          } else {
+            document.getElementById("PostalCodeSuggestions").style.display =
+              "none";
+          }
+        });
+
+      // Fetch postal code suggestions based on input
+      function fetchPostalCodeSuggestions(input) {
+        const countryCode = document.getElementById("CountryName").value;
+        const url = `https://api.addressy.com/LocationServices/Geocoding/GlobalTypeAhead/v1.00/json4.ws?Key=NB96-AA81-UY19-JP82&Input=${input}&Countries=${countryCode}`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => updatePostalCodeSuggestions(data.Items))
+          .catch((error) =>
+            console.error("Error fetching postal code suggestions:", error)
+          );
+      }
+
+      // Update the postal code suggestions list
+      function updatePostalCodeSuggestions(items) {
+        const list = document.getElementById("PostalCodeSuggestions");
+        list.innerHTML = "";
+
+        const searchText = document.getElementById("PostalCode").value;
+
+        // Filter items to include only those with Type = 'PostalCode'
+        const filteredItems = items.filter(
+          (item) => item.Type === "PostalCode"
+        );
+
+        filteredItems.forEach((item) => {
+          const listItem = document.createElement("li");
+          listItem.innerHTML =
+            highlightText(item.Text, searchText) +
+            " " +
+            highlightText(item.Description, searchText);
+          listItem.addEventListener("click", function () {
+            document.getElementById("PostalCode").value = item.Text;
+            document.getElementById("City").value =
+              item.Description.split(", ")[0];
+            fetchAddressDetails(item.Id);
+            list.style.display = "none";
+            document.getElementById("Line1").focus();
+          });
+          list.appendChild(listItem);
+        });
+
+        list.style.display = filteredItems.length ? "block" : "none";
+      }
+
+      // Function to highlight the matching text
+      function highlightText(text, searchText) {
+        const index = text.toLowerCase().indexOf(searchText.toLowerCase());
+        if (index === -1) return text;
+
+        return (
+          text.substring(0, index) +
+          "<strong>" +
+          text.substring(index, index + searchText.length) +
+          "</strong>" +
+          text.substring(index + searchText.length)
+        );
+      }
+
+      // Fetch detailed address information based on address ID
+      function fetchAddressDetails(addressId) {
+        const url = `https://api.addressy.com/LocationServices/Geocoding/GlobalTypeAhead/v1.00/json4.ws?Key=NB96-AA81-UY19-JP82&addressId=${addressId}`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            const item = data.Items[0];
+            document.getElementById("City").value = item.Locality || "";
+            document.getElementById("PostalCode").value = item.Postcode || "";
+            document.getElementById("Line1").focus();
+          })
+          .catch((error) =>
+            console.error("Error fetching address details:", error)
+          );
+      }
+
+      // Add event listener to the Line1 input field
+      document.getElementById("Line1").addEventListener("input", function () {
+        const text = this.value;
+        const postalCode = document.getElementById("PostalCode").value;
+        const city = document.getElementById("City").value;
+        if (text.length >= 1) {
+          fetchAddressesForLine1(text, postalCode, city);
+        }
+      });
+
+      // Fetch street and house number suggestions based on input
+      function fetchAddressesForLine1(searchText, postalCode, city) {
+        const countryCode = document.getElementById("CountryName").value;
+        const url = `http://api.addressy.com/Capture/Interactive/Find/v1.10/json3.ws?Key=NB96-AA81-UY19-JP82&Text=${encodeURIComponent(
+          searchText
+        )}&Language=POR&Countries=${countryCode}&Filters=Postcode:${postalCode}`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => updateAddressListForLine1(data.Items, searchText))
+          .catch((error) => console.error("Error fetching addresses:", error));
+      }
+
+      // Update the Line1 suggestions list
+      function updateAddressListForLine1(items, searchText) {
+        const list = document.getElementById("Line1Suggestions");
+        list.innerHTML = "";
+
+        items.forEach((item) => {
+          let itemText = item.Text;
+
+          if (item.Type === "Container") {
+            let descriptionParts = item.Description.split(" - ");
+            let addressesText = descriptionParts[descriptionParts.length - 1];
+            itemText = `${item.Text} - ${addressesText}`;
+          }
+
+          const listItem = document.createElement("li");
+          listItem.innerHTML = highlightText(itemText, searchText);
+
+          if (item.Type === "Container") {
+            const arrowSpan = document.createElement("span");
+            arrowSpan.textContent = " ▶";
+            arrowSpan.style.float = "right";
+            listItem.appendChild(arrowSpan);
+            listItem.addEventListener("click", function () {
+              document.getElementById("Line1").value = item.Text;
+              updateAddressListForContainer(item.Id);
+            });
+          } else if (item.Type === "Address") {
+            listItem.addEventListener("click", function () {
+              document.getElementById("Line1").value = item.Text;
+              retrieveAddressDetails(item.Id);
+              list.style.display = "none";
+            });
+          }
+
+          list.appendChild(listItem);
+        });
+
+        list.style.display = list.childElementCount > 0 ? "block" : "none";
+      }
+
+      // Update the suggestions list based on container
+      function updateAddressListForContainer(containerId) {
+        const url = `https://api.addressy.com/Capture/Interactive/Find/v1.10/json3.ws?Key=NB96-AA81-UY19-JP82&Container=${containerId}`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            const list = document.getElementById("Line1Suggestions");
+            list.innerHTML = "";
+            const searchText = document.getElementById("Line1").value;
+
+            data.Items.forEach((item) => {
+              const listItem = document.createElement("li");
+              listItem.innerHTML = highlightText(item.Text, searchText);
+              listItem.addEventListener("click", function () {
+                document.getElementById("Line1").value = item.Text;
+
+                retrieveAddressDetails(item.Id);
+                list.style.display = "none";
+              });
+              list.appendChild(listItem);
+            });
+            list.style.display = list.childElementCount > 0 ? "block" : "none";
+          })
+          .catch((error) => console.error("Error fetching addresses:", error));
+      }
+
+      // Retrieve address details based on ID
+      function retrieveAddressDetails(id) {
+        const url = `https://api.addressy.com/Capture/Interactive/Retrieve/v1.00/json3.ws?Key=NB96-AA81-UY19-JP82&Id=${id}&Field1Format={Latitude}&Field2Format={Longitude}`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            const item = data.Items[0];
+            document.getElementById(
+              "Label"
+            ).textContent = `${item.Label}\n\nLatitude: ${item.Field1}\nLongitude: ${item.Field2}`;
+            fillDetailsTable(item);
+
+            document.getElementById("Line1").value = item.Line1 || "";
+            document.getElementById("City").value = item.City || "";
+            document.getElementById("PostalCode").value = item.PostalCode || "";
+            document.getElementById("Province").value = item.ProvinceName || "";
+          })
+          .catch((error) =>
+            console.error("Error retrieving address details:", error)
+          );
+      }
+
+      // Fill the details table with address information
+      function fillDetailsTable(item) {
+        const tableBody = document.getElementById("detailsTableBody");
+        tableBody.innerHTML = "";
+        for (const key in item) {
+          if (item.hasOwnProperty(key)) {
+            const row = tableBody.insertRow();
+            const cell1 = row.insertCell(0);
+            const cell2 = row.insertCell(1);
+            cell1.textContent = key;
+            cell2.textContent = item[key];
+          }
+        }
+      }
+
+      // Toggle the display of the details table
+      function toggleDetails() {
+        const detailsTable = document.getElementById("detailsTable");
+        detailsTable.style.display =
+          detailsTable.style.display === "none" ? "table" : "none";
+      }
+
+      // Add event listener to the toggleDetails button
+      document
+        .getElementById("toggleDetails")
+        .addEventListener("click", function () {
+          toggleDetails();
+          this.textContent = this.textContent.includes("▼ Details")
+            ? "▲ Details"
+            : "▼ Details";
+        });
+      // Add event listener to the nextAddress button
+      document
+        .getElementById("nextAddress")
+        .addEventListener("click", function () {
+          document.getElementById("PostalCode").value = "";
+          document.getElementById("City").value = "";
+          document.getElementById("Line1").value = "";
+          document.getElementById("Province").value = "";
+          document.getElementById("Label").textContent = "Address details";
+          document.getElementById("detailsTableBody").innerHTML = "";
+          document.getElementById("PostalCode").focus();
+        });
+    </script>
+  </body>
+</html>
