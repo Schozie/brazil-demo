@@ -448,7 +448,7 @@
       // Fetch street and house number suggestions based on input
       function fetchAddressesForLine1(searchText, postalCode, city) {
         const countryCode = document.getElementById("CountryName").value;
-        const url = `http://api.addressy.com/Capture/Interactive/Find/v1.10/json3.ws?Key=NB96-AA81-UY19-JP82&Text=${encodeURIComponent(
+        const url = `https://api.addressy.com/Capture/Interactive/Find/v1.10/json3.ws?Key=NB96-AA81-UY19-JP82&Text=${encodeURIComponent(
           searchText
         )}&Language=POR&Countries=${countryCode}&Filters=Postcode:${postalCode}`;
 
